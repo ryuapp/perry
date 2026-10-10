@@ -201,14 +201,14 @@ extern "C" fn semver_order_closure(
 ) -> f64 {
     let left_source = value_to_string(left);
     let right_source = value_to_string(right);
-    let left = match node_semver::Version::parse(normalize_semver_version(&left_source)) {
+    let left = match js_semver::Version::parse(normalize_semver_version(&left_source)) {
         Ok(version) => version,
         Err(_) => crate::exception::js_throw(error_value(&format!(
             "Invalid SemVer: {}",
             left_source.trim()
         ))),
     };
-    let right = match node_semver::Version::parse(normalize_semver_version(&right_source)) {
+    let right = match js_semver::Version::parse(normalize_semver_version(&right_source)) {
         Ok(version) => version,
         Err(_) => crate::exception::js_throw(error_value(&format!(
             "Invalid SemVer: {}",
@@ -230,14 +230,14 @@ extern "C" fn semver_satisfies_closure(
 ) -> f64 {
     let version = value_to_string(version);
     let range = value_to_string(range);
-    let Ok(version) = node_semver::Version::parse(normalize_semver_version(&version)) else {
+    let Ok(version) = js_semver::Version::parse(normalize_semver_version(&version)) else {
         return bool_value(false);
     };
     let range = range.trim();
     if range.is_empty() || range == "*" || range.eq_ignore_ascii_case("latest") {
-        return bool_value(!version.is_prerelease());
+        return bool_value(version.pre_release.is_empty());
     }
-    let satisfied = node_semver::Range::parse(range)
+    let satisfied = js_semver::Range::parse(range)
         .map(|range| range.satisfies(&version))
         .unwrap_or(false);
     bool_value(satisfied)
